@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+import subprocess
+
 from extract_utils.fixups_blob import (
     blob_fixup,
     blob_fixups_user_type,
@@ -18,6 +20,9 @@ from extract_utils.main import (
     ExtractUtilsModule,
 )
 
+def split_apk(ctx, file, file_path, *args, **kwargs):
+    subprocess.run(['split', '--bytes=20M', '-d', file_path, f'{file_path}.part'], check=True)
+
 blob_fixups: blob_fixups_user_type = {
     'system/lib64/libcamera_mianode_jni.xiaomi.so': blob_fixup()
         .add_needed('libgui_camera_shim.so'),
@@ -26,6 +31,8 @@ blob_fixups: blob_fixups_user_type = {
     'system/lib64/libcamera_algoup_jni.xiaomi.so': blob_fixup()
         .add_needed('libgui_camera_shim.so')
         .sig_replace('08 AD 40 F9', '08 A9 40 F9'),
+    'system/priv-app/MiuiCamera/MiuiCamera.apk': blob_fixup()
+        .call(split_apk),
 }  # fmt: skip
 
 lib_fixups: lib_fixups_user_type = {
